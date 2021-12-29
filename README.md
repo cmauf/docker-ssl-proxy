@@ -32,5 +32,9 @@ by connecting an volume onto ``/etc/nginx/certs`` with following files inside:
 
 ## Logging
 
-The container is set to log to ``/var/log/nginx``. You can mount a volume to analyse
+The container is set to log to ``/var/log/nginx``. You can mount a volume to analyze
 the logs.
+
+## Docker Hub Image
+
+You can get the publicly available docker image at [cmaufc/ssl-reverse-proxy](https://hub.docker.com/r/cmaufc/ssl-reverse-proxy).
