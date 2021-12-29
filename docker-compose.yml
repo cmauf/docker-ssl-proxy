@@ -1,0 +1,31 @@
+version: "3.9"
+services:
+  test-site:
+    image: nginx:alpine
+    restart: always
+    ports:
+      - "80"
+  test-backend:
+    image: mariadb
+    restart: unless-stopped
+    ports:
+      - "3306"
+  ssl-proxy:
+    image: docker-ssl-proxy:latest
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:4443"
+    links:
+      - test-site
+      - test-backend
+    environment:
+      - TARGET_HOST=test-site
+      - TARGET_PORT=80
+      - SERVER_NAME=localhost
+      - SSL_PORT=4443
+      - API_ROOT=api
+      - API_HOST=test-backend
+      - API_PORT=3306
+    volumes:
+      - ./certs:/etc/nginx/certs

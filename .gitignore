@@ -1,3 +1,7 @@
 .idea/
+.github
+ci/
 nginx.conf
 certs/
+default
+proxy_params
