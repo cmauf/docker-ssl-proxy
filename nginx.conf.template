@@ -1,32 +1,73 @@
-worker_processes 1;
+worker_processes auto;
 pid /run/nginx.pid;
 daemon off;
 
-error_log stderr info;
-
-events { worker_connections 1024; }
+events { worker_connections 768; }
 
 http {
     sendfile on;
+    tcp_nopush on;
+	tcp_nodelay on;
+	keepalive_timeout 65;
+	types_hash_max_size 2048;
+	# server_tokens off;
 
-    map $http_upgrade $connection_upgrade {
-        default upgrade;
-        '' close;
-    }
+	# server_names_hash_bucket_size 64;
+	# server_name_in_redirect off;
+
+	include /etc/nginx/mime.types;
+	default_type application/octet-stream;
+
+	##
+	# SSL Settings
+	##
+
+	ssl_protocols TLSv1 TLSv1.1 TLSv1.2; # Dropping SSLv3, ref: POODLE
+	ssl_prefer_server_ciphers on;
+
+	##
+	# Logging Settings
+	##
+
+	access_log /var/log/nginx/access.log;
+	error_log /var/log/nginx/error.log;
+
+	##
+	# Gzip Settings
+	##
+
+	gzip off;
+
+	# gzip_vary on;
+	# gzip_proxied any;
+	# gzip_comp_level 6;
+	# gzip_buffers 16 8k;
+	# gzip_http_version 1.1;
+	# gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
 
     server {
-        listen ${SSL_PORT} ssl;
+     listen 80 default_server;
+     listen [::]:80 default_server;
+     server_name _;
+     return 301 https://$host$request_uri;
+}
+    server {
+        listen ${SSL_PORT} ssl http2;
+        listen [::]:${SSL_PORT} ssl http2;
+
+        server_name ${SERVER_NAME};
 
         client_max_body_size ${CLIENT_MAX_BODY_SIZE};
+
         ssl_certificate     /etc/nginx/certs/cert.pem;
         ssl_certificate_key /etc/nginx/certs/key.pem;
 
         error_page 497 301 =307 https://${SERVER_NAME}:${SSL_PORT}$request_uri;
-
-        ssl_session_cache  builtin:1000  shared:SSL:10m;
-        ssl_protocols  TLSv1.2 TLSv1.3;
         ssl_ciphers HIGH:!aNULL:!eNULL:!EXPORT:!CAMELLIA:!DES:!MD5:!PSK:!RC4;
         ssl_prefer_server_ciphers on;
+        ssl_protocols TLSv1.2 TLSv1.3;
+        ssl_session_cache  builtin:1000  shared:SSL:10m;
+    
 
         location / {
             proxy_pass  ${TARGET_SCHEME}://${TARGET_HOST}:${TARGET_PORT};
@@ -38,7 +79,24 @@ http {
             proxy_set_header X-Forwarded-Host  $host;
             proxy_set_header X-Real-IP         $remote_addr;
             proxy_set_header Upgrade           $http_upgrade;
-            proxy_set_header Connection        $connection_upgrade;
+            #proxy_set_header Connection        $connection_upgrade;
+
+            proxy_buffer_size        128k;
+            proxy_buffers            4 256k;
+            proxy_busy_buffers_size  256k;
+        }
+
+        location /${API_ROOT} {
+            proxy_pass  ${API_SCHEME}://${API_HOST}:${API_PORT}/${API_ROOT};
+
+            proxy_set_header Host              ${API_HOST_HEADER};
+            proxy_set_header X-Real-IP         $remote_addr;
+            proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_set_header X-Forwarded-Host  $host;
+            proxy_set_header X-Real-IP         $remote_addr;
+            proxy_set_header Upgrade           $http_upgrade;
+            #proxy_set_header Connection        $connection_upgrade;
 
             proxy_buffer_size        128k;
             proxy_buffers            4 256k;
