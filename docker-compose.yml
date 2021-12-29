@@ -24,7 +24,7 @@ services:
       - TARGET_PORT=80
       - SERVER_NAME=localhost
       - SSL_PORT=4443
-      - API_ROOT=api
+      - API_ROOT=/api
       - API_HOST=test-backend
       - API_PORT=3306
     volumes:

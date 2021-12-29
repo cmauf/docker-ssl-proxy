@@ -86,8 +86,8 @@ http {
             proxy_busy_buffers_size  256k;
         }
 
-        location /${API_ROOT} {
-            proxy_pass  ${API_SCHEME}://${API_HOST}:${API_PORT}/${API_ROOT};
+        location ${API_ROOT} {
+            proxy_pass  ${API_SCHEME}://${API_HOST}:${API_PORT}${API_ROOT};
 
             proxy_set_header Host              ${API_HOST_HEADER};
             proxy_set_header X-Real-IP         $remote_addr;
