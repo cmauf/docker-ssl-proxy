@@ -5,3 +5,4 @@ nginx.conf
 certs/
 default
 proxy_params
+*.pem
